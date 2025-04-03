@@ -4,15 +4,16 @@ import requests
 import json
 import random
 import os
+from dotenv import load_dotenv
 
 # .envファイルからトークンを読み込む
-# load_dotenv()
-# TOKEN = os.getenv("DISCORD_TOKEN")
-TOKEN = "MTM1NjgyNjM0MTc3Njk0OTMzOA.GKt4t2.bpdUWJykPeYXchmfTupJO_WdGbSiuIgMk3cMik"
+load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
+
 GUILD_ID = 1040166489963118592
 
 # GASのデプロイURL（自身のGASのURLに変更）
-GAS_API_URL = "https://script.google.com/macros/s/AKfycbzSLHCpSUc07K2kLH-T13Fu4ZClUMig5yybhzqPpGMAdvJd457ymXmXRUIp6vuVPEvE/exec"
+GAS_API_URL = os.getenv("GAS_URL")
 
 #アタッカーチームデータ
 team_Attack = []
