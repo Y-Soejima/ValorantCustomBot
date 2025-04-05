@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-GUILD_ID = 1040166489963118592
+GUILD_ID = 966704632246198376
 
 # GASのデプロイURL（自身のGASのURLに変更）
 GAS_API_URL = os.getenv("GAS_URL")
