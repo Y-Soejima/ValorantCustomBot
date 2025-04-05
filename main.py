@@ -131,8 +131,8 @@ async def start(interaction: discord.Interaction):
 
     await interaction.response.defer()
     # ここにVCチャンネルのIDを設定
-    ATTACKER_VC_ID = 1356897260541055139  # アタッカーチーム用VCのID
-    DEFENDER_VC_ID = 1356897482839425091  # ディフェンダーチーム用VCのID
+    ATTACKER_VC_ID = 966704632917295179  # アタッカーチーム用VCのID
+    DEFENDER_VC_ID = 1204099851915239496  # ディフェンダーチーム用VCのID
 
     # ギルド（サーバー）からVCを取得
     guild = interaction.guild
