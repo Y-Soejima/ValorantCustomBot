@@ -21,9 +21,17 @@ team_Attack = []
 #ディフェンダーチーム
 team_Defense = []
 
-# GASからデータを取得する関数
+# GSSから参加者データを取得する関数
 def fetch_checked_rows():
-    response = requests.get(GAS_API_URL)
+    response = requests.get(GAS_API_URL + "?action=participants")
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {"error": f"Error: {response.status_code}"}
+
+# GSSからマップデータを取得する関数
+def fetch_map():
+    response = requests.get(GAS_API_URL + "?action=maps")
     if response.status_code == 200:
         return response.json()
     else:
@@ -70,7 +78,10 @@ def create_teams(participants, max_swaps=250):
     
     return team_a, team_b
     
-    
+#マップを抽選
+def random_map(maps):
+    mapdata = random.choice(maps)
+    return(mapdata)
 
 # Botクラスの作成
 class MyBot(discord.Client):
@@ -81,12 +92,17 @@ class MyBot(discord.Client):
         
         super().__init__(intents=intents)  # インテントを指定して親クラスを初期化
         self.tree = app_commands.CommandTree(self)
-
+        
     async def on_ready(self):
         guild = discord.Object(id=GUILD_ID)
         try:
-            await self.tree.sync(guild=guild)  # スラッシュコマンドを同期
+            # await self.tree.sync(guild=guild)  # スラッシュコマンドを同期
+            # print("スラッシュコマンドがサーバーに同期されました")
+            synced = await self.tree.sync(guild=guild)  # 同期
             print("スラッシュコマンドがサーバーに同期されました")
+            print("現在登録されているコマンド:")
+            for cmd in synced:
+                print(f"- {cmd.name}: {cmd.description}")
         except Exception as e:
             print("コマンド同期時にエラーが発生しました: {e}")
 
@@ -95,8 +111,18 @@ bot = MyBot()
 #/syncコマンド
 @bot.tree.command(name="sync", description="スラッシュコマンドを手動で同期")
 async def sync(interaction: discord.Interaction):
-    await bot.tree.sync()
-    await interaction.response.send_message("スラッシュコマンドを同期しました！", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)  # 一旦応答保留（非公開）
+
+    guild = interaction.guild
+    try:
+        # 一度コマンドをリセット
+        bot.tree.clear_commands(guild=guild)
+
+        # 再登録
+        await bot.tree.sync(guild=guild)
+        await interaction.followup.send("このサーバーにスラッシュコマンドを同期しました！")
+    except Exception as e:
+        await interaction.followup.send(f"同期中にエラーが発生しました: {e}")
 
 # /custom コマンド
 @bot.tree.command(name="custom", description="カスタムチーム分けを行います")
@@ -124,7 +150,17 @@ async def custom(interaction: discord.Interaction):
 
     await interaction.followup.send(message)
 
-#startコマンド
+#/mapコマンド
+@bot.tree.command(name="map", description="マップを選択します", guild=discord.Object(id=GUILD_ID))
+async def map(interaction: discord.Interaction):
+    await interaction.response.defer()
+    data = fetch_map()
+    print(data)
+    result = random_map(data)
+
+    await interaction.followup.send(f"マップ:{result}")
+
+#/startコマンド
 @bot.tree.command(name="start", description="VCを移動させゲームを開始します")
 async def start(interaction: discord.Interaction):
     global team_Attack, team_Defense
