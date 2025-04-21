@@ -165,9 +165,9 @@ async def custom(interaction: discord.Interaction):
 
     await interaction.followup.send(message)
 
-#/agentコマンド
-@bot.tree.command(name="agent", description="エージェントを指定してチーム分けを行います", guild=discord.Object(id=GUILD_ID))
-async def agent(interaction: discord.Interaction):
+#/agentTeamコマンド
+@bot.tree.command(name="agent_team", description="エージェントを指定してチーム分けを行います", guild=discord.Object(id=GUILD_ID))
+async def agent_team(interaction: discord.Interaction):
     global team_Attack, team_Defense
 
     await interaction.response.defer()
@@ -200,6 +200,32 @@ async def agent(interaction: discord.Interaction):
     #     message += f"{p['userName']}\n"
     #     print(f"Name: {p['userName']}, RankPoint: {p['rankPoint']}")
 
+    await interaction.followup.send(message)
+
+#agentコマンド
+@bot.tree.command(name="agent", description="エージェントを指定します", guild=discord.Object(id=GUILD_ID))
+async def agent(interaction: discord.Interaction):
+
+    await interaction.response.defer()
+
+    agentdata = fetch_agents()
+    print(agentdata)
+    agentResult = random_agent(agentdata)
+
+    AttackPick, DefensePick = agentResult
+
+    message= "\nアタッカーチーム:\n"
+    print("\nアタッカーチーム:")
+    for agent in AttackPick:
+        message += f"{agent['name']}\n"
+        print(f"Agent: {agent['name']}")
+    
+    message += "\nディフェンダーチーム:\n"
+    print("\nディフェンダーチーム:")
+    for agent in DefensePick:
+        message += f"{agent['name']}\n"
+        print(f"Agent: {agent['name']}")
+    
     await interaction.followup.send(message)
 
 #/mapコマンド
