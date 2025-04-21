@@ -37,6 +37,14 @@ def fetch_map():
     else:
         return {"error": f"Error: {response.status_code}"}
 
+#GSSからエージェントデータを取得する関数
+def fetch_agents():
+    response = requests.get(GAS_API_URL + "?action=agent")
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {"error": f"Error: {response.status_code}"}
+
 #取得したデータからカスタムチーム振り分け
 def create_teams(participants, max_swaps=250):
     # 参加者リストをランダムに並べ替え
@@ -82,6 +90,13 @@ def create_teams(participants, max_swaps=250):
 def random_map(maps):
     mapdata = random.choice(maps)
     return(mapdata)
+
+#エージェントをランダムに振り分け
+def random_agent(agents):
+    AteamPick = random.sample(agents, 5)
+    DteamPick = random.sample(agents, 5)
+
+    return AteamPick, DteamPick
 
 # Botクラスの作成
 class MyBot(discord.Client):
@@ -147,6 +162,43 @@ async def custom(interaction: discord.Interaction):
     for p in team_Defense:
         message += f"{p['userName']}\n"
         print(f"Name: {p['userName']}, RankPoint: {p['rankPoint']}")
+
+    await interaction.followup.send(message)
+
+#/agentコマンド
+@bot.tree.command(name="agent", description="エージェントを指定してチーム分けを行います", guild=discord.Object(id=GUILD_ID))
+async def agent(interaction: discord.Interaction):
+    global team_Attack, team_Defense
+
+    await interaction.response.defer()
+    data = fetch_checked_rows()
+    print(data)
+    result =create_teams(data)
+
+    agentdata = fetch_agents()
+    print(agentdata)
+    agentResult = random_agent(agentdata)
+
+    team_Attack, team_Defense = result
+    AttackPick, DefensePick = agentResult
+
+    message= "\nアタッカーチーム:\n"
+    print("\nアタッカーチーム:")
+    for member, agent in zip(team_Attack, AttackPick):
+        message += f"{member['userName']}:{agent['name']}\n"
+        print(f"Name: {member['userName']}, RankPoint: {member['rankPoint']}, Agent: {agent['name']}")
+    # for p in team_Attack:
+    #     message += f"{p['userName']}\n"
+    #     print(f"Name: {p['userName']}, RankPoint: {p['rankPoint']}")
+    
+    message += "\nディフェンダーチーム:\n"
+    print("\nディフェンダーチーム:")
+    for member, agent in zip(team_Defense, DefensePick):
+        message += f"{member['userName']}:{agent['name']}\n"
+        print(f"Name: {member['userName']}, RankPoint: {member['rankPoint']}, Agent: {agent['name']}")
+    # for p in team_Defense:
+    #     message += f"{p['userName']}\n"
+    #     print(f"Name: {p['userName']}, RankPoint: {p['rankPoint']}")
 
     await interaction.followup.send(message)
 
@@ -220,6 +272,36 @@ async def start(interaction: discord.Interaction):
         await interaction.followup.send(f"以下のメンバーをVCへ移動しました:\n{', '.join(moved_members)}")
     else:
         await interaction.followup.send("移動対象のメンバーが見つかりませんでした。")
+
+# /pinコマンド 必要な時にローカルから行う
+# @bot.tree.command(name="pin", description="指定したメッセージIDのメッセージをピン止めします", guild=discord.Object(id=GUILD_ID))
+# async def pin_message(interaction: discord.Interaction, message_id: str):
+#     try:
+#         channel = interaction.channel
+#         message = await channel.fetch_message(int(message_id))
+#         await message.pin()
+#         await interaction.response.send_message("✅ メッセージをピン止めしました！", ephemeral=True)
+#     except discord.NotFound:
+#         await interaction.response.send_message("⚠️ メッセージが見つかりません。", ephemeral=True)
+#     except discord.Forbidden:
+#         await interaction.response.send_message("⚠️ メッセージをピン止めする権限がありません。", ephemeral=True)
+#     except Exception as e:
+#         await interaction.response.send_message(f"⚠️ エラーが発生しました: {e}", ephemeral=True)
+
+#/clearコマンド 必要な時にローカルから使う
+@bot.tree.command(name="clear_bot", description="Botが送信したメッセージを一括で削除します", guild=discord.Object(id=GUILD_ID))
+async def clear_bot_messages(interaction: discord.Interaction, limit: int):
+    await interaction.response.defer(ephemeral=True)  # 「処理中...」を出す
+
+    if not (1 <= limit <= 100):
+        await interaction.followup.send("⚠️ 1〜100の範囲で指定してください。")
+        return
+
+    def is_bot_message(msg):
+        return msg.author == interaction.client.user
+
+    deleted = await interaction.channel.purge(limit=limit, check=is_bot_message)
+    await interaction.followup.send(f"✅ Botのメッセージを {len(deleted)} 件削除しました。")
 
 # Botを実行
 bot.run(TOKEN)
