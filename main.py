@@ -329,5 +329,17 @@ async def clear_bot_messages(interaction: discord.Interaction, limit: int):
     deleted = await interaction.channel.purge(limit=limit, check=is_bot_message)
     await interaction.followup.send(f"✅ Botのメッセージを {len(deleted)} 件削除しました。")
 
+#/diceコマンド 
+@bot.tree.command(name="dice", description="1から指定された数字の中からランダムに数字を返します", guild=discord.Object(id=GUILD_ID))
+async def clear_bot_messages(interaction: discord.Interaction, limit: int):
+    await interaction.response.defer(ephemeral=False)  # 「処理中...」を出す
+
+    if (0 >= limit):
+        await interaction.followup.send("⚠️ 1〜100の範囲で指定してください。")
+        return
+
+    result = random.randint(0, limit)
+    await interaction.followup.send(f"{result}")
+
 # Botを実行
 bot.run(TOKEN)
