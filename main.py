@@ -338,7 +338,7 @@ async def clear_bot_messages(interaction: discord.Interaction, limit: int):
         await interaction.followup.send("⚠️ 1〜100の範囲で指定してください。")
         return
 
-    result = random.randint(0, limit)
+    result = random.randint(1, limit)
     await interaction.followup.send(f"{result}")
 
 # Botを実行
